@@ -169,3 +169,102 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# Nextflow specific
+.nextflow*
+work/
+.nextflow/
+.nextflow.log*
+
+# Intermediate files
+*.bam
+*.sam
+*.fastq
+*.fq
+*.fasta
+*.fa
+*.gz
+*.zip
+*.tar
+*.tar.gz
+
+# Nextflow reports and logs
+report.html*
+timeline.html*
+trace.txt*
+dag.dot*
+.DS_Store
+
+# Conda environments
+conda_env/
+
+# Singularity images
+*.sif
+*.img
+
+# Docker images
+*.tar
+*.simg
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# IDE specific files
+.idea/
+.vscode/
+*.iml
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# R specific
+.Rhistory
+.RData
+.Rproj.user/
+
+# Java specific
+*.class
+*.jar
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Nextflow config overrides
+nextflow.config.local
+
+# Output directories
+results/
+output/
+
+# Temporary Nextflow directories
+.cache/
+.nextflow/
+
+# Fusion file system cache
+.fusion/
+
+# Wave containers
+.wave/
+
+# nf-core specific
+nf-core-*/
+
+# Ignore all hidden files and directories except .gitignore
+.*
+!.gitignore
