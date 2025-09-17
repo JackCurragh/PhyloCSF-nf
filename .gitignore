@@ -268,3 +268,4 @@ nf-core-*/
 # Ignore all hidden files and directories except .gitignore
 .*
 !.gitignore
+data/

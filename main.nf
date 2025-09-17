@@ -7,49 +7,28 @@ include { DOWNLOAD_MAFS_AND_INDEX } from './subworkflows/download_mafs'
 include { PROCESS_MAFS } from './subworkflows/process_mafs'
 include { RUN_PHYLOCSF } from './subworkflows/run_phylocsf'
 include { PREPARE_FEATURES } from './modules/prepare_features'
-
+include { FORMAT_RESULTS } from './modules/format_results'
 
 nextflow.enable.dsl = 2
-
-// Define a process to download and index MAF files if not provided
-
-
-// Define a process to use existing MAF and index files
-process USE_EXISTING_MAF {
-    input:
-    tuple val(chromosome), path(maf), path(bb)
-    
-    output:
-    tuple val(chromosome), path(maf), path(bb)
-    
-    script:
-    """
-    echo "Using existing MAF file for ${chromosome}: ${maf}"
-    echo "Using existing MAF index for ${chromosome}: ${bb}"
-    """
-}
 
 workflow {
     chromosomes = Channel
                     .fromPath(params.chrom_sizes)
                     .splitCsv(sep: '\t', header: ['chrom', 'size'])
                     .map { row -> row.chrom }
+
     if (params.maf_dir) {
         // Use existing MAF files
-        Channel
-            .fromFilePairs("${params.maf_dir}/${params.maf_pattern}", size: -1)
-            .map { chr, files -> 
-                def maf = files.find { it.name.endsWith('.maf') }
-                def bb = files.find { it.name.endsWith('.maf.bb') }
+        maf_ch = chromosomes
+            .map { chrom -> 
+                def bb = file("${params.maf_dir}/${chrom}${params.bb_pattern}")
+                def maf = file("${params.maf_dir}/${chrom}${params.maf_pattern}")
                 if (!maf || !bb) {
-                    error "Missing MAF or index file for chromosome ${chr}"
+                    error "Missing MAF or index file for chromosome ${chrom}"
                 }
-                tuple(chr, maf, bb)
+                tuple(chrom, maf, bb)
             }
-            .set { maf_files_ch }
         
-        USE_EXISTING_MAF(maf_files_ch)
-        maf_ch = USE_EXISTING_MAF.out
     } else {
         if (!params.chrom_sizes) {
            error "Chromosome sizes file must be provided using --chrom_sizes parameter"
@@ -60,18 +39,37 @@ workflow {
     }
 
     // Use maf_ch in your subsequent processes
-    maf_ch.view { chromosome, maf, bb -> 
-        "Chromosome: $chromosome, MAF: ${maf.name}, Index: ${bb.name}"
-    }
-
     feature_specific_bed12 = PREPARE_FEATURES(chromosomes, params.feature_bed12)
-    feature_specific_bed12.view { it }
 
     // Subworkflow to process MAFs (extract regions and merge)
-    PROCESS_MAFS(maf_ch, feature_specific_bed12)
+    // Create a channel from maf_ch with chromosome as the key
+    maf_ch_keyed = maf_ch.map { chrom, maf, bb -> 
+        [chrom, [maf, bb]]
+    }
+
+    // Create a channel from feature_specific_bed12_ch with chromosome as the key
+    bed_ch_keyed = feature_specific_bed12.flatMap { chrom, beds -> 
+        beds.collect { bed -> 
+            [chrom, bed]
+        }
+    }
+    // Join the two channels based on the chromosome key
+    joined_ch = maf_ch_keyed.cross(bed_ch_keyed)
+
+    result_ch = joined_ch.map { item ->
+        def chrom = item[0][0]
+        def maf = item[0][1][0]
+        def bb = item[0][1][1]
+        def bed = item[1][1]
+        [chrom, bed, maf, bb]
+    }
+
+    PROCESS_MAFS(result_ch)
 
     // Run PhyloCSF
     RUN_PHYLOCSF(PROCESS_MAFS.out)
+    
+    FORMAT_RESULTS(RUN_PHYLOCSF.out.collect(), params.feature_bed12)
 }
 
 // Output configuration

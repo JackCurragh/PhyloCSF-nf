@@ -7,7 +7,7 @@ process PREPARE_FEATURES{
     path full_bed
     
     output:
-    tuple val(chromosome), path("*.bed")
+    tuple val(chromosome), path("*.bed"), optional: true
     
     script:
     """

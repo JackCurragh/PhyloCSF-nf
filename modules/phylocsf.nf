@@ -1,18 +1,17 @@
 
 
 process PHYLOCSF {
-    publishDir "${params.outdir}", mode: 'copy'
+    publishDir "${params.outdir}/phylocsf", mode: 'copy'
 
     input:
-    path merged_maf
+    path merged_fasta
 
     output:
-    path "phylocsf_results.txt"
+    path "*phylocsf_results.txt"
 
     script:
     """
-    # Add your PhyloCSF command here
-    # This is a placeholder command
-    touch phylocsf_results.txt
+    PhyloCSF 120mammals --removeRefGaps $merged_fasta > ${merged_fasta.simpleName}_phylocsf_results.txt
+
     """
 }

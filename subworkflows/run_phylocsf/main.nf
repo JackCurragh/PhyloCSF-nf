@@ -9,5 +9,5 @@ workflow RUN_PHYLOCSF {
     phylocsf_results = PHYLOCSF(bed12_file)
 
     emit:
-    maf_files = phylocsf_results
+    phylocsf_results
 }
