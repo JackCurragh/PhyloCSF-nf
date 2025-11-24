@@ -9,10 +9,20 @@ workflow PROCESS_MAFS {
 
     main:
 
-    extracted_regions = EXTRACT_REGIONS(matched_beds_and_mafs).groupTuple()
+    extracted_regions = EXTRACT_REGIONS(matched_beds_and_mafs)
 
-    merged_alignments = MAF_TO_FASTA(extracted_regions, params.species_map)
+    // Group MAF files by transcript ID
+    grouped_mafs = extracted_regions.map { transcript_id, maf, bed ->
+        [transcript_id, maf]
+    }.groupTuple()
+
+    // Collect all BED files for strand extraction
+    bed_files = extracted_regions.map { transcript_id, maf, bed ->
+        bed
+    }.collect()
+
+    merged_alignments = MAF_TO_FASTA(grouped_mafs, params.species_map, bed_files)
 
     emit:
-    merged_alignments.merged_fastas 
+    merged_alignments.merged_fastas
 }

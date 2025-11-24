@@ -42,21 +42,25 @@ def merge_maf_files(input_pattern, output_dir):
 def stitch_blocks(input_maf_path, output_fasta_path, strand='+'):
     """
     Convert MAF to FASTA by stitching alignment blocks.
-    
+
     Args:
         input_maf_path: Path to input MAF file
         output_fasta_path: Path to output FASTA file
         strand: Strand orientation ('+' or '-')
     """
     blocks = {}
-    all_species = set()
-    
+    all_species = []
+    seen_species = set()
+
     # Parse MAF file
     for i, alignment in enumerate(AlignIO.parse(input_maf_path, "maf")):
         blocks[i] = {}
         for seqrec in alignment:
             blocks[i][seqrec.id] = str(seqrec.seq)
-            all_species.add(seqrec.id)
+            # Maintain order: add species only once, in order of first appearance
+            if seqrec.id not in seen_species:
+                all_species.append(seqrec.id)
+                seen_species.add(seqrec.id)
     
     # Initialize empty sequences for all species
     stitched_seqs = defaultdict(str)

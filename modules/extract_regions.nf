@@ -8,7 +8,7 @@ process EXTRACT_REGIONS {
     tuple val(chrom), path(feature_specific_bed12), path(maf_file), path(bb_file)
 
     output:
-    tuple val("${feature_specific_bed12.simpleName.replaceAll(/_exon\d+$/, '')}"), path("*.maf"), emit: extracted_regions
+    tuple val("${feature_specific_bed12.simpleName.replaceAll(/_exon\d+$/, '')}"), path("*.maf"), path(feature_specific_bed12), emit: extracted_regions
 
     script:
     """
