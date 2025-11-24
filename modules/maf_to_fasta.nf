@@ -3,9 +3,8 @@ process MAF_TO_FASTA {
     publishDir "${params.outdir}/extracted_mafs", mode: 'copy'
 
     input:
-    tuple val(chrom), path(extracted_regions)
+    tuple val(transcript_id), path(extracted_regions), path(bed_files)
     path(species_map)
-    path(bed_files)
 
     output:
     path "fasta/*.fasta", emit: merged_fastas
